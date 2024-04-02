@@ -55,7 +55,7 @@ margin-top:-10px;
     const noteCheckBox = this.shadowRoot.querySelector('.note-checkbox')
     noteCheckBox.addEventListener('change', () => {
       if (noteCheckBox.checked) {
-        this.closest('.note-container').removeChild(this)
+        this.parentNode.removeChild(this)
       }
     })
   }
