@@ -1,5 +1,5 @@
 import "./NoteCard.js";
-// ini import untuk ngambil data, makanya di data kita export constnya
+import "./SearchBar.js";
 import { notes } from "../data/data.js";
 
 class NoteContainer extends HTMLElement {
@@ -9,40 +9,76 @@ class NoteContainer extends HTMLElement {
   }
 
   connectedCallback() {
-    // nah di sini notes tadi di masukin layaknya function javascript pada
-    // umumnya
     this.render(notes);
+    this.hideCardListener();
+    this.searchListener();
+    this.addNoteListener()
   }
 
   render(notes) {
-    // nah di sini lo render pertama div containernya
     this.shadowRoot.innerHTML = `
+      <style>
+        .note-container {
+          border-style: solid;
+          border-width: 5px;
+          border-color:blue;
+          border-radius: 25px;
+          padding:20px
+        }
+      </style>
       <div class="note-container">
+        <search-bar></search-bar>
+        <div class="note-list-container"></div>
       </div>
-      `;
-    // nah ini di siapin sebagai selector nanti
-    // ini kita milih element yang punya kelas "note-container"
-    const noteContainer = this.shadowRoot.querySelector(".note-container");
-    // nah di sini proses mulai kita ngerender si note-card
-    // nah di sini si notes ini kan isinya array, kita bisa pake forEach buat
-    // breakdown setiap object di array,
+    `;
+    this.filteredNotes = [...notes];
+    this.renderNotes(this.filteredNotes);
+  }
+
+  renderNotes(notes) {
+    const noteContainer = this.shadowRoot.querySelector(".note-list-container");
+    noteContainer.innerHTML = '';
     notes.forEach((note) => {
-      // nah d sini kita kasih function untuk setiap note yang ada, kita mau
-      // ngapain
-      // nah ini kita mau createElement <note-card>
       const noteCard = document.createElement("note-card");
-      // di sini ktia tambahin attribut untuk si note card
-      // <note-card title={note.title}>
       noteCard.setAttribute("title", note.title);
-      // <note-card title={note.title} body={note.body}>
       noteCard.setAttribute("body", note.body);
-      // <note-card title={note.title} body={note.body} createdAt={note.createdAt}>
       noteCard.setAttribute("createdAt", note.createdAt);
-      // nah di sini kita minta noteContainer yang kita pilih di atas tadi,
-      // untuk masukin si element yang baru kita buat ini <note-card att...>
+      noteCard.setAttribute("class", "note-card");
       noteContainer.appendChild(noteCard);
     });
   }
-}
 
+  hideCardListener() {
+    this.shadowRoot.addEventListener('hideNoteCard', (event) => {
+      const index = event.detail.index;
+      const noteCards = this.shadowRoot.querySelectorAll('.note-card');
+      noteCards[index].style.display = 'none';
+    });
+
+  }
+
+  searchListener() {
+    const searchBar = this.shadowRoot.querySelector('search-bar');
+    searchBar.addEventListener('search', (event) => {
+      const searchTerm = event.detail.searchTerm;
+      this.filteredNotes = notes.filter(note => note.title.toLowerCase().includes(searchTerm));
+      this.renderNotes(this.filteredNotes);
+    });
+
+  }
+
+  addNoteListener() {
+    console.log("add note listener")
+    document.addEventListener("noteAdded", (event) => {
+      console.log("add note ready to listen")
+      const newNote = event.detail.note;
+      console.log("newNote-dettal", newNote)
+      notes.push(newNote);
+      console.log("notes psuh", notes)
+      this.filteredNotes = [...notes]
+      this.renderNotes(this.filteredNotes);
+    })
+  }
+
+}
 customElements.define("note-container", NoteContainer);
